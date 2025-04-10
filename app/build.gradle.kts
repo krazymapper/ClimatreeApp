@@ -3,17 +3,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
-    id("com.google.ar.sceneform.plugin")
 }
 
 android {
-    namespace = "com.example.touuri"
-    compileSdk = 35
+    namespace = "com.example.climatree"
+    compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.touuri"
+        applicationId = "com.example.climatree"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -30,11 +29,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -95,13 +94,19 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // ARCore
+    // ARCore - Mise à jour vers la dernière version
     implementation("com.google.ar:core:1.40.0")
-    implementation("com.google.ar.sceneform:core:1.17.1")
-    implementation("com.google.ar.sceneform:assets:1.17.1")
-    implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
     
-    // 3D Models
-    implementation("com.github.bumptech.glide:glide:4.12.0")
+    // Sceneform est obsolète, utilisation de Filament directement
     implementation("com.google.android.filament:filament-android:1.9.25")
+    implementation("com.google.android.filament:filament-utils-android:1.9.25")
+    implementation("com.google.android.filament:gltfio-android:1.9.25")
+    
+    // Glide pour le chargement d'images
+    implementation("com.github.bumptech.glide:glide:4.12.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
+
+    // ARCore
+    implementation("com.google.ar.sceneform:core:1.17.1")
+    implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
 }
