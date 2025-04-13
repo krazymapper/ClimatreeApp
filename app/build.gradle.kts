@@ -96,7 +96,7 @@ dependencies {
     // Room database
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
 
     // Firebase and ML Kit
     implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
@@ -128,12 +128,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
-// KAPT configuration
-kapt {
-    correctErrorTypes = true
-    useBuildCache = true
-    javacOptions {
-        option("-source", "17")
-        option("-target", "17")
-    }
+// KSP configuration
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+    arg("room.expandProjection", "true")
 }
