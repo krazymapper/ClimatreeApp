@@ -1,31 +1,35 @@
+// app/build.gradle (ou le fichier build.gradle de votre module d'application)
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
+    id("com.google.devtools.ksp") version "1.9.22-1.0.17"
 }
 
 android {
-    namespace = "com.example.climatree"
+    namespace = "com.example.climatport"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.climatree"
+        applicationId = "com.example.climatport"
         minSdk = 26
         targetSdk = 34
+
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -34,80 +38,102 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
+            "-Xjvm-default=all"
+        )
     }
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.8"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/ASL2.0"
+            excludes += "META-INF/*.kotlin_module"
+        }
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+    ndkVersion = "25.1.8937393"
 }
 
 dependencies {
-    // AndroidX Core
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    
-    // Compose
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    
-    // OpenStreetMap
-    implementation("org.osmdroid:osmdroid-android:6.1.17")
-    
-    // Location Services
-    implementation("com.google.android.gms:play-services-location:21.1.0")
-    
-    // CSV Handling
-    implementation("com.opencsv:opencsv:5.9")
-    
-    // OAuth for OpenStreetMap
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    
-    // Firebase
+    // Core Android dependencies
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.activity:activity-compose:1.8.2")
+
+    // Jetpack Compose dependencies
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.material:material")
+
+    // Kotlin dependencies
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    // Room database
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    // Firebase and ML Kit
     implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
-    
-    // ML Kit pour la reconnaissance d'images
+
+    // ML Kit dependencies
     implementation("com.google.mlkit:image-labeling:17.0.7")
-    implementation("com.google.mlkit:image-labeling-custom:17.0.1")
-    
-    // CameraX
-    implementation("androidx.camera:camera-camera2:1.3.1")
-    implementation("androidx.camera:camera-lifecycle:1.3.1")
-    implementation("androidx.camera:camera-view:1.3.1")
-    
-    // Coil pour le chargement d'images
-    implementation("io.coil-kt:coil-compose:2.5.0")
-    
-    // Testing
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("com.google.mlkit:object-detection:17.0.0")
+    implementation("com.google.mlkit:face-detection:16.1.5")
 
-    // ARCore - Mise à jour vers la dernière version
+    // AR Core and Sceneform
     implementation("com.google.ar:core:1.40.0")
-    
-    // Sceneform est obsolète, utilisation de Filament directement
-    implementation("com.google.android.filament:filament-android:1.9.25")
-    implementation("com.google.android.filament:filament-utils-android:1.9.25")
-    implementation("com.google.android.filament:gltfio-android:1.9.25")
-    
-    // Glide pour le chargement d'images
-    implementation("com.github.bumptech.glide:glide:4.12.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
+    implementation("io.github.sceneview:sceneview:2.0.2")
+    implementation("io.github.sceneview:arsceneview:2.0.2")
 
-    // ARCore
-    implementation("com.google.ar.sceneform:core:1.17.1")
-    implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
+    // Charts
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Testing dependencies
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+// KAPT configuration
+kapt {
+    correctErrorTypes = true
+    useBuildCache = true
+    javacOptions {
+        option("-source", "17")
+        option("-target", "17")
+    }
 }

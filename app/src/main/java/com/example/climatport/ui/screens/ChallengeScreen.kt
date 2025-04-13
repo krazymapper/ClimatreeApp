@@ -1,4 +1,4 @@
-package com.example.climatree.ui.screens
+package com.example.climatport.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*

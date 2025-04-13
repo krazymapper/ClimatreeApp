@@ -1,4 +1,4 @@
-package com.example.climatree.data
+package com.example.climatport.data
 
 import android.content.Context
 import android.net.Uri
@@ -9,6 +9,10 @@ import com.google.android.filament.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.CompletableFuture
+import com.google.ar.core.ArCoreApk
+import com.google.ar.core.Session
+import com.google.ar.core.exceptions.UnavailableException
+import java.util.concurrent.atomic.AtomicReference
 
 class TreeARExperienceService(private val context: Context) {
     private var engine: Engine? = null
@@ -18,6 +22,30 @@ class TreeARExperienceService(private val context: Context) {
     private var assetLoader: AssetLoader? = null
     private var treeInstance: FilamentAsset? = null
     private var impactInstance: FilamentAsset? = null
+    private val arSession = AtomicReference<Session?>(null)
+
+    data class TreeARModel(
+        val species: String,
+        val height: Float,
+        val diameter: Float,
+        val age: Int,
+        val environmentalImpact: EnvironmentalImpact,
+        val futureProjection: FutureProjection
+    )
+
+    data class EnvironmentalImpact(
+        val co2Absorbed: Double, // kg de CO2 absorbés
+        val oxygenProduced: Double, // kg d'oxygène produits
+        val waterRetained: Double, // litres d'eau retenus
+        val temperatureReduction: Double, // degrés Celsius
+        val biodiversityScore: Int // score de biodiversité
+    )
+
+    data class FutureProjection(
+        val co2Projection: List<Double>, // projection sur 10 ans
+        val growthProjection: List<Float>, // projection de croissance
+        val healthProjection: List<Int> // projection de santé (0-100)
+    )
 
     suspend fun initialize() = withContext(Dispatchers.IO) {
         engine = Engine.create()
@@ -38,6 +66,20 @@ class TreeARExperienceService(private val context: Context) {
         view?.apply {
             scene = this@TreeARExperienceService.scene
             camera = Camera(engine!!)
+        }
+    }
+
+    suspend fun initializeAR(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            when (ArCoreApk.getInstance().requestInstall(context, true)) {
+                ArCoreApk.InstallStatus.INSTALLED -> {
+                    arSession.set(Session(context))
+                    Result.success(Unit)
+                }
+                else -> Result.failure(Exception("ARCore n'est pas installé"))
+            }
+        } catch (e: UnavailableException) {
+            Result.failure(e)
         }
     }
 
@@ -174,5 +216,68 @@ class TreeARExperienceService(private val context: Context) {
             .sampler(Texture.Sampler.SAMPLER_CUBEMAP)
             .format(Texture.InternalFormat.RGBA8)
             .build(engine!!)
+    }
+
+    fun createTreeARModel(
+        tree: TreeData,
+        impact: EnvironmentalImpact,
+        projection: FutureProjection
+    ): TreeARModel {
+        return TreeARModel(
+            species = tree.species,
+            height = tree.height,
+            diameter = tree.diameter,
+            age = tree.age,
+            environmentalImpact = impact,
+            futureProjection = projection
+        )
+    }
+
+    fun calculateEnvironmentalImpact(tree: TreeData): EnvironmentalImpact {
+        // Calculs basés sur des formules scientifiques
+        val co2Absorbed = tree.height * tree.diameter * 0.1 // kg de CO2
+        val oxygenProduced = co2Absorbed * 0.7 // kg d'O2
+        val waterRetained = tree.height * tree.diameter * 2.5 // litres
+        val temperatureReduction = tree.height * 0.1 // degrés Celsius
+        val biodiversityScore = when (tree.species) {
+            "native" -> 100
+            "exotic" -> 50
+            else -> 75
+        }
+        
+        return EnvironmentalImpact(
+            co2Absorbed = co2Absorbed,
+            oxygenProduced = oxygenProduced,
+            waterRetained = waterRetained,
+            temperatureReduction = temperatureReduction,
+            biodiversityScore = biodiversityScore
+        )
+    }
+    
+    fun projectFutureImpact(
+        currentImpact: EnvironmentalImpact,
+        tree: TreeData
+    ): FutureProjection {
+        val years = 10
+        val co2Projection = List(years) { year ->
+            currentImpact.co2Absorbed * (1 + year * 0.1)
+        }
+        val growthProjection = List(years) { year ->
+            tree.height * (1 + year * 0.05f)
+        }
+        val healthProjection = List(years) { year ->
+            (100 - year * 2).coerceAtLeast(0)
+        }
+        
+        return FutureProjection(
+            co2Projection = co2Projection,
+            growthProjection = growthProjection,
+            healthProjection = healthProjection
+        )
+    }
+    
+    fun dispose() {
+        arSession.get()?.close()
+        arSession.set(null)
     }
 } 

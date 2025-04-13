@@ -1,4 +1,4 @@
-package com.example.climatree.ui.screens
+package com.example.climatport.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
